@@ -1,0 +1,54 @@
+// This #include statement was automatically added by the Particle IDE.
+#include <Adafruit_TSL2561_U.h>
+   
+Adafruit_TSL2561_Unified tsl = Adafruit_TSL2561_Unified(TSL2561_ADDR_FLOAT, 12345);
+
+#define SUNLIGHT 50
+bool inSun = false;
+
+int luxReading;
+
+void configureSensor(void)
+{
+  tsl.enableAutoRange(true);
+  tsl.setIntegrationTime(TSL2561_INTEGRATIONTIME_13MS);
+}
+
+void setup(void) 
+{
+  Serial.begin(9600);
+  configureSensor();
+  Serial.println("Light Sensor On");
+}
+
+void loop(void) 
+{  
+  sensors_event_t event;
+  tsl.getEvent(&event);
+  
+  if (event.light)
+  {
+    luxReading = event.light;
+    Serial.print(luxReading);
+    Serial.println(" lux");
+  }
+  else
+  {
+    Serial.println("Sensor overload");
+  }
+  
+  if(luxReading > SUNLIGHT && inSun == false)
+  {
+      Particle.publish("light-level", "sun", PRIVATE);
+      Serial.println("Sun");
+      inSun = true;
+  }
+  if(luxReading < SUNLIGHT && inSun == true)
+  {
+      Particle.publish("light-level", "dark", PRIVATE);
+      Serial.println("Dark");
+      inSun = false;
+  }
+  
+  delay(5000);
+}
